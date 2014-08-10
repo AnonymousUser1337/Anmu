@@ -297,10 +297,10 @@ READ_STAGE2:
    ;
    ; Should calculate this from extentSize field: sector count = (extentSize / sectorSize) + 1
    ;
-   mov word [DiskAddressPacket.SectorsToRead], 4
+   mov word [DiskAddressPacket.SectorsToRead], 4;which sector to start reading from
 	
 	xor cx, cx;clears out cx
-	mov cx, 0x01;puts in cx 0x04 for how many sectors to read
+	mov cx, 0x01;puts in cx 0x01 for how many sectors to read
 	call Read_Sectors;calls the read sectors
 	Print READ_SUCCESS, TEAL;if it gets here that means it was successful
 	;jump to where the file is located and run it
