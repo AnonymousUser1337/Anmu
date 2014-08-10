@@ -1,3 +1,3 @@
 AnmuOS
 ======
-This Project is not yet finished
+Stage 2 does not yet call kMain from the Kernel , I have to link it first
