@@ -294,15 +294,7 @@ GDT_64:
          
          
          
-ALIGN 4 
-IDT: 
-    .Length       dw 0 
-    .Base         dd 0 
 
-PML4_POINTER:;blank table 
-        dd 0                                                                             
-PML4_POINTER_END: 
-table_768: dd 0 
 
 
 
