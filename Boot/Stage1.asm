@@ -249,7 +249,7 @@ READ_STAGE2:
 		jmp .top
 		.Success:
 			
-			;Print Progress_MSG, PURPLE;progress message
+			
 						
 			
 			INC BX;get ready for next character
