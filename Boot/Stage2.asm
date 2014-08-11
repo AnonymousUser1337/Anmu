@@ -202,7 +202,7 @@ main:
 
         lgdt[GDT_64.Pointer]
 
-        mov eax,cr0       ; <<  problem here 
+        mov eax,cr0       
         or  eax,1 << 31
         mov cr0,eax         ; enable paging
 
@@ -253,8 +253,6 @@ main:
 Entered_PMODE:  db "You have succcessfully entered Protected Mode :D",0xA, 0 
 LOAD_SUCCESS:   db "Stage 2 Loaded Successfully",0xA, 0 
 CDDriveNumber:  db 0 
-Entered_LMODE:  db "You have successfully entered Long Mode :D !!!!!!!!!!!",0xA,0 
-
 
 GDT_START: 
 ;null descriptor 
