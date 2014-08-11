@@ -338,7 +338,7 @@ READ_STAGE2:
 ret
 main:
 	;first stage of bootloader is loaded at the address 0x07c0:0x0
-	;second stage of bootloader is loaded at address 0x5000:0x0
+	;second stage of bootloader is loaded at address 0x2000:0x0
 	cli  
 	mov ax, 0x07c0
     mov ds, ax
