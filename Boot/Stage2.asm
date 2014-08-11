@@ -2,14 +2,16 @@
 [BITS 16] 
 
 
-Start: 
+global _Start:
+_Start: 
 
  jmp  main 
+ extern kMain; tell nasm and the linker that this function is not located in this file 
 ;;;;;;;;;;;;;;;;;; 
-;                ; 
-;                ; 
+;                                ; 
+;                                ; 
 ;    Constants   ; 
-;                ; 
+;                                ; 
 ;;;;;;;;;;;;;;;;;; 
 %DEFINE TEAL 0x03 
 %DEFINE RED 0x04 
@@ -28,7 +30,7 @@ Y_POS:  db 0
 ;;;;;;;;;;;;;;;;;; 
 ;    Enabling    ; 
 ;    The A20     ; 
-;      line      ; 
+;         line           ; 
 ;;;;;;;;;;;;;;;;;; 
 EnableA20: 
 
@@ -200,7 +202,7 @@ main:
 
         lgdt[GDT_64.Pointer]
 
-        mov eax,cr0       
+        mov eax,cr0       ; <<  problem here 
         or  eax,1 << 31
         mov cr0,eax         ; enable paging
 
@@ -224,8 +226,18 @@ main:
  
 			mov rax, 0x4F214F644F6C4F72
 			mov [edi + 16], rax
+			MOV EDI, VIDEO_MEM
+			mov rax, 0x4F6C4F6C4F654F48    
+			mov [edi],rax
+ 
+			mov rax, 0x4F6F4F574F204F6F
+			mov [edi + 8], rax
+ 
+			mov rax, 0x4F214F644F6C4F72
+			mov [edi + 16], rax
 			
-			;call kMain
+			
+			call kMain; Execute the kernel
 			
 		cli
 		hlt
@@ -283,7 +295,16 @@ GDT_64:
 
          
          
-    
+         
+ALIGN 4 
+IDT: 
+    .Length       dw 0 
+    .Base         dd 0 
+
+PML4_POINTER:;blank table 
+        dd 0                                                                             
+PML4_POINTER_END: 
+table_768: dd 0 
 
 
 
