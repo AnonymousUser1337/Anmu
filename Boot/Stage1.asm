@@ -249,7 +249,7 @@ READ_STAGE2:
 		jmp .top
 		.Success:
 			
-			
+			;Print Progress_MSG, PURPLE;progress message
 						
 			
 			INC BX;get ready for next character
@@ -297,10 +297,10 @@ READ_STAGE2:
    ;
    ; Should calculate this from extentSize field: sector count = (extentSize / sectorSize) + 1
    ;
-   mov word [DiskAddressPacket.SectorsToRead], 4;sector to start reading from
+   mov word [DiskAddressPacket.SectorsToRead], 4
 	
 	xor cx, cx;clears out cx
-	mov cx, 0x01;puts in cx 0x01 for how many sectors to read
+	mov cx, 0x01;puts in cx 0x04 for how many sectors to read
 	call Read_Sectors;calls the read sectors
 	Print READ_SUCCESS, TEAL;if it gets here that means it was successful
 	;jump to where the file is located and run it
@@ -338,7 +338,7 @@ READ_STAGE2:
 ret
 main:
 	;first stage of bootloader is loaded at the address 0x07c0:0x0
-	;second stage of bootloader is loaded at address 0x2000:0x0
+	;second stage of bootloader is loaded at address 0x5000:0x0
 	cli  
 	mov ax, 0x07c0
     mov ds, ax
@@ -458,36 +458,36 @@ CD_dir_curr_size:			db 		0x0
 Reading_Sectors: 			db 		"Reading sectors", 0
 CHECK_DESC_MSG:				db		"Checking for CD Signature",0
 LOADING_STAGE2_MSG:			db		"Loading Stage 2 of boot loader",0
-STAGE_2_LEN:				DW 		0xC
-File_Found:					db		"File for Stage 2 of the bootloader was found!!",0
-LOADING_STAGE2_FAILED:		db  	"Failed to load Stage 2 of the boot loader !!!!!",0
-Found_Possible_FILE:		db		"Found Possible File: ",0
-Colon: 						db		":",0
-FILE_ENTRY:					db 		0
+STAGE_2_LEN:				DW 		0xA
+File_Found:				db		"File for Stage 2 of the bootloader was found!!",0
+LOADING_STAGE2_FAILED:			db  	"Failed to load Stage 2 of the boot loader !!!!!",0
+Found_Possible_FILE:			db		"Found Possible File: ",0
+Colon: 					db		":",0
+FILE_ENTRY:				db 		0
 JolietSig       			DB  	25h, 2fh, 45h                               ; this is the value of the escape sequence for a Joliet CD 
-BOOT_MSG:					DB 		"Boot Info Table:", 0				
-DOTS:						db 		".....",0	
+BOOT_MSG:				DB 		"Boot Info Table:", 0				
+DOTS:					db 		".....",0	
 					;Disk Address Packet				
-DiskAddressPacket:          db 0x010,0 						  
-.SectorsToRead:             dw 1                              ; Number of sectors to read (read size of OS) 
-.Offset:                    dw 0                              ; Offset :0000h
-.Segment:                   dw 0x0200                         ; Segment 01000h
-.End:                       dq 0x010                             ; Sector 16 or 10h on CD-ROM 
+DiskAddressPacket:          		db 0x010,0 						  
+.SectorsToRead:             		dw 1                              ; Number of sectors to read (read size of OS) 
+.Offset:                    		dw 0                              ; Offset :0000h
+.Segment:                   		dw 0x0200                         ; Segment 01000h
+.End:                       		dq 0x010                             ; Sector 16 or 10h on CD-ROM 
 
-VOLUME: 					DW 0
-BootInfoPrimVolDescr_MSG:	db "Volume Descriptor: ", 0
-BootInfoFileLoc_MSG         db "File Location:     ", 0  
-BootInfoFileLength_MSG		db "File Length:       ", 0
-BootInfoChecksum_MSG       	db "Checksum:          ", 0
-BootInfoReserved_MSG        db "Reserved:          ", 0					
-W_MSG: 						db "Loading Z-Boot", 0
-STAGE2: 					db "STAGE2.BIN;1"
-Read_Sector_Error_MSG: 		db "Error, failed to read sector",0
+VOLUME: 				DW 0
+BootInfoPrimVolDescr_MSG:		db "Volume Descriptor: ", 0
+BootInfoFileLoc_MSG         		db "File Location:     ", 0  
+BootInfoFileLength_MSG			db "File Length:       ", 0
+BootInfoChecksum_MSG       		db "Checksum:          ", 0
+BootInfoReserved_MSG    	  	db "Reserved:          ", 0					
+W_MSG: 					db "Loading Z-Boot", 0
+STAGE2: 				db "ANMU.BIN;1"
+Read_Sector_Error_MSG: 		 	db "Error, failed to read sector",0
 READ_SUCCESS: 				db "Sectors read correctly!",0
 Progress_MSG: 				db ".",0
 FILE_NOT_FOUND: 			db "Error, file not found!",0
-FOUND_CD: 					db "Found the CD Signature!", 0
-times 2046 - ($ - $$) 		db 0; padd out the rest of the file to 0
+FOUND_CD: 				db "Found the CD Signature!", 0
+times 2046 - ($ - $$) 			db 0; padd out the rest of the file to 0
 
 
 
