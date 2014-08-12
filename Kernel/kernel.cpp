@@ -9,10 +9,10 @@ void kMain(void)
 {	
 
 	char * s;
-	;prints an A to the top left of the screen
+	//prints an A to the top left of the screen
 	s	= ( char*)VIDEO_MEM;
 	s[0] = 'A';
-	s[1] = 0x03;color attribute
+	s[1] = 0x03//color attribute
 	
 	
 	
