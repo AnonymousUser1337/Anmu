@@ -1,300 +1,506 @@
+[BITS   16]
 
-[BITS 16] 
+[ORG  0x0]
 
-
-global _Start:
-_Start: 
-
- jmp  main 
- extern kMain; tell nasm and the linker that this function is not located in this file 
-;;;;;;;;;;;;;;;;;; 
-;                                ; 
-;                                ; 
-;    Constants   ; 
-;                                ; 
-;;;;;;;;;;;;;;;;;; 
-%DEFINE TEAL 0x03 
-%DEFINE RED 0x04 
-%DEFINE PURPLE 0x05 
-%DEFINE VIDEO_MEM 0xB8000 
-%DEFINE COLS    80                      ; width and height of screen 
-%DEFINE LINES   25 
-%DEFINE TEAL_B 0x3F203F203F203F20
-%DEFINE BLUE_B 0x1F201F201F201F20
-%DEFINE RED_B 0x4F204F204F204F20
-
-X_POS:  db 0 
-Y_POS:  db 0 
+start : jmp 0x7c0:main
+;
+; boot info block
+;
+times 8-($-$$) db 0
+BootInfoPrimVolDescr   resd 1
+BootInfoFileLoc           resd 1
+BootInfoFileLength      resd  1
+BootInfoChecksum       resd 1
+BootInfoReserved        resd 40
 
 
-;;;;;;;;;;;;;;;;;; 
-;    Enabling    ; 
-;    The A20     ; 
-;         line           ; 
-;;;;;;;;;;;;;;;;;; 
-EnableA20: 
+;Colors for text
+%DEFINE TEAL 0x03
+%DEFINE RED 0x04
+%DEFINE PURPLE 0x05
+%define ISO_DIRECTORY_LEN 33      ; length of constant part of directory record
+%define ISO_DIRECTORY_LBA_OFFSET 2
 
-    IN AL, 0x92         ; A20, using fast A20 gate 
-    MOV CL, AL 
-    AND CL, 2 
-    JNZ .skip            ; if a20 bit seems set, don't touch it 
-    OR AL, 2 
-    OUT 0x92, AL 
-    .skip: 
+COL: db 0
+ROW:  db 0
+LOADSEG equ 0x200 ; ?
+LOADOFFS equ 0 ; ?
+jumptarget dw LOADOFFS, LOADSEG
+;macro for print
+%macro Print 2
+pusha
+	xor ax, ax
+	xor dx, dx
+	mov dh, BYTE[ROW];puts the row into the dh register
+	mov dl, BYTE[COL]
+	xor bx, bx
+	mov bl, %2
+	mov si, %1
+	call cPrint
+	mov BYTE[COL], dl
+ ;saves the rows for the next time we need to print
+popa
+%endmacro
 
-ret 
+Print_ln:
 
-
-[BITS 32] 
-        clear: 
-         
-        pusha 
-        mov edi, VIDEO_MEM 
-        mov BYTE[edi], ' ' 
-        mov BYTE[edi+1], TEAL
-        rep stosw 
-        MOV BYTE[X_POS], 0x0 
-        MOV BYTE [Y_POS], 0x0 
-        popa 
-        ret 
-         
-        sPrint: 
-        pusha 
-                jmp .start 
-                .Row: 
-                call NewLine 
-                MOV BYTE[EDI], ' ' 
-                jmp .Next 
-                .start: 
-                MOV EDI, VIDEO_MEM 
-                xor ecx, ecx 
-                xor eax, eax 
-                mov     ecx, COLS*2             ; Mode 7 has 2 bytes per char, so its COLS*2 bytes per line 
-                mov     al, BYTE [Y_POS]        ; get y pos 
-                mul     ecx                     ; multiply y*COLS 
-                push    eax                     ; save eax--the multiplication 
-                  
-                mov     al, byte [X_POS]        ; multiply _CurX by 2 because it is 2 bytes per char 
-                mov     cl, 2 
-                mul     cl 
-                pop     ecx                     ; pop y*COLS result 
-                add     eax, ecx 
-                 
-                 
-                add edi, eax 
-                mov al,BYTE[bx] 
-                 
-                cmp al, 0x0;check if end 
-                je .Done 
-                cmp al, 0xA;check if new line 
-                je .Row 
-                 
-                mov BYTE[edi],al  
-                .Next: 
-                mov BYTE[edi+1], TEAL
-                INC BX 
-                inc     BYTE[X_POS]             ; go to next character 
-                cmp     BYTE[X_POS], COLS               ; are we at the end of the line? 
-                je      .Row                    ; yep-go to next row 
-                 
-                 
-                jmp .start 
-        .Done: 
-         
-         
-        popa 
-         
-        ret 
-        NewLine: 
-        inc BYTE[Y_POS] 
-        MOV BYTE[X_POS], -1 
-         
-        ret 
-      
+pusha   
+	mov dh, BYTE[ROW]          
+    mov ah, 0x02            ;set cursor pos
+    mov bh, 0x00            ;page 00
+    inc dh            		;row 00
+    mov dl, 0x00            ;col. 00    
+	int 0x10
+	mov BYTE[ROW], dh
+	mov BYTE[COL], 0
+	popa
 
 
-	[BITS 16]
+ret
 
-main:            
-;first stage of bootloader is loaded at the address 0x07c0:0 
-        ;second stage of bootloader is loaded at address 0x200:0x0 
+itoa:;number is passed into ax
+jmp .beggining
+.negate:
 
+neg ax
+push ax
 
-        cli 
-   xor ax, ax         ; All segments set to 0, flat memory model 
-   mov ds, ax 
-   mov es, ax 
-   mov gs, ax 
-   mov fs, ax 
-   mov ss, ax 
-   ; 
-   ; Set stack top SS:0xffff 
-   ; 
-   mov sp, 0x0FFFF 
-   ; 
-
-
-        mov [CDDriveNumber], dl 
-
-        SwitchToProtectedMode: 
-
-        lgdt [GDT_32];load the gdt 
-        call EnableA20 
+mov al, '-'
+mov ah, 0xe 
+int 0x10
+pop ax
+jmp .top
+.beggining:
+xor bx , bx
+mov cx, 10;mov into cx 10
+cmp ax, 0
+jl .negate
 
 
-        mov eax, cr0 
-        or eax, 1 
-        mov cr0, eax 
+.top:
+	;divide by 10 and push remainder onto stack 
+	xor dx, dx;clear out remainder
+	div cx ;divide ax by 10
+	push dx;push the remainder onto the stack for later
+	inc bx;count the number of digits
+	test ax,ax;if ax = 0 then stop
+jne .top
+
+.loop:
+	pop ax;restore the remainder
+	add ax, '0';convert to ASCII
+	mov ah, 0xe;print
+	int 0x10
+	dec bx;get ready for the next digit
+	cmp bx, 0;if not zero then jump to .loop	
+jne .loop
+ret
+
+cPrint:                   ; Routine: output string in SI to screen
 
 
-         ; Flush CS and set code selector 
-   ; 
-        jmp 0x8:Protected_Mode 
+ .top:
+ 	;Paramaters for Input 
+    mov ah, 09h             ; Must be 9 to print color
+    mov cx, 0x01 			;x position
+    lodsb                   ; Get character from string
+    test al, al
+    je .done                ; If char is zero, end of string
+    int 0x10                 ; Otherwise, print it
 
-        [BITS 32];Declare 32 bits 
+    mov ah, 0x02			;set cursor position
+    mov bh, 0x00			;page
+    inc dl 		;column
+    int 0x10				;changes the cursor position so the next char can be written at the new location
+    jmp .top
 
-        Protected_Mode: 
+ .done:
+    ret
 
+;clears the screen and sets the cursor position to the top left 
+ clear:
+    mov ah, 0x0F            ;get current video mode
+    mov al, 0x00            ;reset register
+    int 0x10                ;get video mode
+    mov ah, 0x00            ;set video mode
+    int 0x10                ;reset screen
+    mov ah, 0x02            ;set cursor pos
+    mov bh, 0x01            ;page 00
+    mov dh, 0x00            ;row 00
+    mov dl, 0x00            ;col. 00
+    int 0x10    	;set pos
+	mov BYTE[ROW], DH
+	mov BYTE[COL],0
+ret
+
+
+Read_Sectors:  
+        ;/* Read the sector into memory. */
+       
+		.ForLoop:
+			mov     ah,042h
+			xor     al,al
+			mov     si, DiskAddressPacket
+			mov     dl, [CDDriveNumber]
+			int     013h
+        jnc    .Success 	; /* read error? */
+
+        Print Read_Sector_Error_MSG, RED
 		
+		cli
+		hlt
 
-        mov eax,0x10    ; load 4 GB data descriptor
-        mov ds,ax           ; to all data segment registers
-        mov es,ax
-        mov fs,ax
-        mov gs,ax
-        mov ss,ax
+.Success:
+		Print Progress_MSG , PURPLE
+		inc WORD[DiskAddressPacket.SectorsToRead]
 		
-		call clear
-		xor bx, bx
-		mov bx, Entered_PMODE
-		call sPrint
+        loop    .ForLoop
+		call Print_ln
+ret
+CHECK_DESC:
+	Print CHECK_DESC_MSG, TEAL
+	mov es, WORD[DiskAddressPacket.Segment]
+	mov di, WORD[DiskAddressPacket.Offset]
+	
+	xor bx, bx
+	.top:
+		mov al, BYTE[ES:DI+BX]
+		mov BYTE[VOLUME+BX], al
 		
-        mov eax,cr4
-        or  eax,1 << 5
-        mov cr4,eax         ; enable physical-address extensions
+		inc bx
+		cmp al, ' '
+		je .Done
+		jmp .top
+	.Done:
 
-        mov edi,70000h
-        mov ecx,4000h >> 2
-        xor eax,eax
-        rep stosd           ; clear the page tables
+	;see if the Volume descriptor contains the Signature
+	xor BX, BX; clear out bx
+	add BX, 0x01;move into bx the offset
+	xor cx, cx;clear out cx
+	.toploop:
+	xor ax, ax
+	mov al, BYTE[VOLUME+BX] 
+	cmp al, BYTE[CD_Signature+BX-1]
+	je .FOUND_IT; Compare the letters Byte by Byte to see if they are the same
+	jmp .Done2
+	inc CX;increments if even one letter is wrong
+	.FOUND_IT:
+	Print Progress_MSG, PURPLE
+	inc BX;Increments the offset
+	
+	jmp .toploop
+	
+	.Done2:
+	cmp CX, 0;if signatures don't match then stop the system and print an error Message
+	jne .FAIL
+	call Print_ln
+	
+	Print FOUND_CD, TEAL
+	jmp .Done3
+	.FAIL:
+	Print FILE_NOT_FOUND, RED
+	cli
+	hlt
+	.Done3:
+	call Print_ln
+ret
+READ_STAGE2:
+	Print LOADING_STAGE2_MSG, TEAL
+	call Print_ln
+		
+	mov di, [DiskAddressPacket.Offset]
+	mov es, [DiskAddressPacket.Segment]
 
-        mov dword [70000h],71000h + 111b ; first PDP table
-        mov dword [71000h],72000h + 111b ; first page directory
-        mov dword [72000h],73000h + 111b ; first page table
-
-        mov edi,73000h      ; address of first page table
-        mov eax,0 + 111b
-        mov ecx,256         ; number of pages to map (1 MB)
-    make_page_entries:
-        stosd
-        add edi,4
-        add eax,1000h
-        loop    make_page_entries
-
-        mov eax,70000h
-        mov cr3,eax         ; load page-map level-4 base
-
-        mov ecx,0C0000080h      ; EFER MSR
-        rdmsr
-        or  eax,1 << 8      ; enable long mode
-        wrmsr
-
-
-        lgdt[GDT_64.Pointer]
-
-        mov eax,cr0       
-        or  eax,1 << 31
-        mov cr0,eax         ; enable paging
-
-
-
-        jmp 0x08:Long_Mode 
-        [BITS 64] 
-
-
-        Long_Mode:
+	
+    xor BX, BX;clears out bx
+	xor si, si ;clears out si
+	xor cx, cx
+	MOV CX, [ES:DI+32]
+    .top:
+		
+		
+		MOV AL,BYTE[ES:DI+BX] ;moves a byte of a possible start of a file entry
+		cmp AL,BYTE[STAGE2];compares it with file I want
+		je .Done;if it is then jump out of loop
+		INC BX;get ready for next file entry
+	jmp .top
+	
+	.Done:
+	Print Found_Possible_FILE, TEAL;prints it found a possible file
+	XOR SI, SI;Clear out for use
+	;=INC BX
+	;INC SI
+	xor cx, cx;clear out for use as counter
+	.top2:;compares strings to see if they are the same
+		;xor ax, ax;clears out acx
+		
+		;prints out a letter to the screen
+		MOV AL, BYTE[ES:DI+BX]
+		MOV AH, 0xE
+		INT 0x010
+		;;;;;;;;;;;;;;;;;;
+		
+		xor ax, ax
+		MOV AL, BYTE [ES:DI+BX]
+		cmp AL, BYTE[STAGE2+SI]
+		
+		je .Success
+		call Print_ln
+		jmp .top
+		.Success:
 			
-			call clear_64
+			;Print Progress_MSG, PURPLE;progress message
+						
 			
-			; Display "Hello World!" in red and white
-			MOV EDI, VIDEO_MEM
-			mov rax, 0x4F6C4F6C4F654F48    
-			mov [edi],rax
- 
-			mov rax, 0x4F6F4F574F204F6F
-			mov [edi + 8], rax
- 
-			mov rax, 0x4F214F644F6C4F72
-			mov [edi + 16], rax
-			MOV EDI, VIDEO_MEM
-			mov rax, 0x4F6C4F6C4F654F48    
-			mov [edi],rax
- 
-			mov rax, 0x4F6F4F574F204F6F
-			mov [edi + 8], rax
- 
-			mov rax, 0x4F214F644F6C4F72
-			mov [edi + 16], rax
-			
-			
-			call kMain; Execute the kernel
-			
+			INC BX;get ready for next character
+			INC SI;get ready for next character	
+			INC CX; increment counter 
+	cmp CX, WORD[STAGE_2_LEN] 
+	jne .top2
+	;call clear
+	call Print_ln
+	Print File_Found, TEAL;prints found file if found
+	call Print_ln
+	
+	Print Reading_Sectors, TEAL;prints reading sector message
+	;call clear
+	
+	
+	%define STAGE2_LEN 10            ; ANMU.BIN;1
+	%define ISO_DIRECTORY_LEN 33      ; length of constant part of directory record
+	%define ISO_DIRECTORY_LBA_OFFSET 2  ; offset of LBA member of structure
+
+   ;
+   ; Set SEG:OFFSET to 0x2000 load address
+   ;
+   mov word [DiskAddressPacket.Offset], 0
+   mov word [DiskAddressPacket.Segment], 0x200
+   ;
+   ; Adjust BX
+   ;
+   mov di, bx   ; save bx and get rid of it. Only want to use ES:DI
+   xor bx, bx
+   ;
+   ; Adjust ES:DI to point to LBA / Extent member of directory structure
+   ;
+   sub di, STAGE2_LEN
+   sub di, ISO_DIRECTORY_LEN
+   add di, ISO_DIRECTORY_LBA_OFFSET
+   ;
+   ; Now [ES:DI] -> LBA / Extent of directory record in both endian formats; grab little endian format into EAX
+   ;
+   mov eax, [ES:DI]
+   ;
+   ; Now EAX = LBA to start loading from. Store it
+   ;
+   mov dword [DiskAddressPacket.End], EAX
+   ;
+   ; Should calculate this from extentSize field: sector count = (extentSize / sectorSize) + 1
+   ;
+   mov word [DiskAddressPacket.SectorsToRead], 4
+	
+	xor cx, cx;clears out cx
+	mov cx, 0x01;puts in cx 0x04 for how many sectors to read
+	call Read_Sectors;calls the read sectors
+	Print READ_SUCCESS, TEAL;if it gets here that means it was successful
+	;jump to where the file is located and run it
+	
+	call Print_ln
+	MOV AX, ES
+	call itoa
+	
+	
+	mov AL, ':'
+	MOV AH, 0xE
+	INT 0x010
+	
+	
+
+	MOV AX, DI
+	call itoa
+	
+	call Print_ln
+	;call clear
+	mov dl, [CDDriveNumber]
+
+	push	0x200
+	push	0x000
+	retf
+	 
+	
+	
+	.FAIL:;it failed so print that the file wasn't found and halt the system
+	;call Print_ln
+	Print FILE_NOT_FOUND, RED
+	cli
+	hlt
+	         
+ret
+main:
+	;first stage of bootloader is loaded at the address 0x07c0:0x0
+	;second stage of bootloader is loaded at address 0x5000:0x0
+	cli  
+	mov ax, 0x07c0
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    ;Set up Stack
+	xor ax, ax
+    mov ss, ax
+    mov sp, 0xFFFE
+	sti
+	
+	mov     [CDDriveNumber],dl
+	call clear
+
+
+	Print W_MSG, TEAL;prints the loading message in colour
+	Print DOTS, PURPLE
+	call Print_ln
+	call Print_ln
+	
+	Print BOOT_MSG, TEAL
+	call Print_ln
+	
+	
+	Print BootInfoPrimVolDescr_MSG, TEAL
+	MOV AX, WORD[BootInfoPrimVolDescr]
+	call itoa
+	call Print_ln
+	
+	Print BootInfoFileLoc_MSG, TEAL
+	MOV AX,  WORD[BootInfoFileLoc]
+	call itoa
+	call Print_ln
+	
+	Print BootInfoFileLength_MSG, TEAL
+	MOV AX, WORD[BootInfoFileLength]
+	call itoa
+	call Print_ln
+	
+	Print BootInfoChecksum_MSG, TEAL
+	MOV AX, WORD[BootInfoChecksum]
+	call itoa
+	call Print_ln
+	
+	Print BootInfoReserved_MSG, TEAL
+	MOV AX, WORD[BootInfoReserved]
+	call itoa
+	call Print_ln
+	
+	call Print_ln
+
+
+	
+	
+
+	;First find the Signature of the CD 
+	Print Reading_Sectors, TEAL
+	LOAD_SIGNATURE:
+	mov cx, 0x04
+	call Read_Sectors
+	
+	Print READ_SUCCESS, TEAL
+	call Print_ln
+	;load the Volume descriptor to the Volume variable
+	call CHECK_DESC
+	;Now Load the Root Directory from the Volume Descriptor
+	LOAD_ROOT:
+		;Print Reading_Sectors, TEAL
+		mov es, WORD[DiskAddressPacket.Segment]
+		mov di, WORD[DiskAddressPacket.Offset]
+		
+		XOR BX, BX
+		MOV BX, 40 ;move in the offset
+		VolumeLabelLoop: 
+
+			MOV CL,[ES:DI+BX]                   ; Grab a letter 
+			CMP CL,' '                          ; Is it a space? (Assumes end of string is space, may run out) 
+			JE .VolumeLabelDone                 ; Yes, we are done 
+
+			MOV [VOLUME+BX-40],CL 
+			INC BX 
+			JMP VolumeLabelLoop                 ; Need to compare BX to length of Volume Label on CD (32?) 
+
+			.VolumeLabelDone: 
+				Print Reading_Sectors, TEAL
+				MOV byte [VOLUME+BX-40],0      ; End the string 
+
+				MOV EAX,[ES:DI+158]                 ; LBA of root directory, where all things start. 
+				;MOV [DiskAddressPacket.End],EAX     ; Load packet with new address on CD of the root directory 
+				MOV [DiskAddressPacket.End],EAX     ; Load packet with new address on CD of the root directory 
+				xor cx, cx
+				mov cx, 0x04
+				call Read_Sectors
+			                             
+				
+				Print READ_SUCCESS, TEAL;if the program gets here it means it was a success
+				call Print_ln
+				
+LOAD_STAGE2:
+		
+	call READ_STAGE2
+		
+		
+		.FAILURE:
+		Print FILE_NOT_FOUND, RED
 		cli
 		hlt
 		
-		clear_64:
-		 ; Blank out the screen to a blue color.
-			mov edi, VIDEO_MEM
-			mov rcx, 500                      ; Since we are clearing QWORDs over here, we put the count as Count/4.
-			mov rax, RED_B       ; Set the value to set the screen to: Red background, white foreground, blank spaces.
-			rep stosq                         ; Clear the entire screen. 
-		ret
-        
-Entered_PMODE:  db "You have succcessfully entered Protected Mode :D",0xA, 0 
-LOAD_SUCCESS:   db "Stage 2 Loaded Successfully",0xA, 0 
-CDDriveNumber:  db 0 
+		
+					
+CDDriveNumber: 				db 	  	0x080
+CD_Signature: 			   	db    	"CD001"
+CD_FILE_VER:			   	db    	0x01
+CD_FileNameLength:			db	  	0x0
+CD_dir_curr_size:			db 		0x0
+Reading_Sectors: 			db 		"Reading sectors", 0
+CHECK_DESC_MSG:				db		"Checking for CD Signature",0
+LOADING_STAGE2_MSG:			db		"Loading Stage 2 of boot loader",0
+STAGE_2_LEN:				DW 		0xA
+File_Found:					db		"File for Stage 2 of the bootloader was found!!",0
+LOADING_STAGE2_FAILED:		db  	"Failed to load Stage 2 of the boot loader !!!!!",0
+Found_Possible_FILE:		db		"Found Possible File: ",0
+Colon: 						db		":",0
+FILE_ENTRY:					db 		0
+JolietSig       			DB  	25h, 2fh, 45h                               ; this is the value of the escape sequence for a Joliet CD 
+BOOT_MSG:					DB 		"Boot Info Table:", 0				
+DOTS:						db 		".....",0	
+					;Disk Address Packet				
+DiskAddressPacket:          db 0x010,0 						  
+.SectorsToRead:             dw 1                              ; Number of sectors to read (read size of OS) 
+.Offset:                    dw 0                              ; Offset :0000h
+.Segment:                   dw 0x0200                         ; Segment 01000h
+.End:                       dq 0x010                             ; Sector 16 or 10h on CD-ROM 
 
-GDT_START: 
-;null descriptor 
-dd 0 
-dd 0 
-;data descriptor 
-dw 0xFFFF 
-dw 0 
-db 0 
-db 10011010b 
-db 11001111b 
-db 0 
-;code descriptor 
-dw 0xFFFF 
-dw 0 
-db 0 
-db 10010010b 
-db 11001111b 
-db 0 
-GDT_END: 
-align 4 
-GDT_32: 
-dw GDT_END - GDT_START - 1 
-dd GDT_START 
-
-
-
-GDT_64: 
-.Null: 
-    dq 0x0000000000000000             ; Null Descriptor - should be present. 
-  
-.Code_64: 
-    dq 0x0020980000000000             ; 64-bit code descriptor.  
-    dq 0x0000900000000000             ; 64-bit data descriptor.  
-.Pointer: 
-    dw $ - GDT_64 - 1                    ; 16-bit Size (Limit) of GDT. 
-    dd GDT_64                            ; 32-bit Base Address of GDT. (CPU will zero extend to 64-bit) 
-
-         
-         
-         
+VOLUME: 					DW 0
+BootInfoPrimVolDescr_MSG:	db "Volume Descriptor: ", 0
+BootInfoFileLoc_MSG         db "File Location:     ", 0  
+BootInfoFileLength_MSG		db "File Length:       ", 0
+BootInfoChecksum_MSG       	db "Checksum:          ", 0
+BootInfoReserved_MSG        db "Reserved:          ", 0					
+W_MSG: 						db "Loading Z-Boot", 0
+STAGE2: 					db "ANMU.BIN;1"
+Read_Sector_Error_MSG: 		db "Error, failed to read sector",0
+READ_SUCCESS: 				db "Sectors read correctly!",0
+Progress_MSG: 				db ".",0
+FILE_NOT_FOUND: 			db "Error, file not found!",0
+FOUND_CD: 					db "Found the CD Signature!", 0
+times 2046 - ($ - $$) 		db 0; padd out the rest of the file to 0
 
 
 
 
+
+
+
+
+
+							
+							
+							
+							
+							
+							
+							
