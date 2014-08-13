@@ -40,7 +40,7 @@ unsigned const int Cols = 80;
 
 
 inline void itoa(int, int, int);
-inline void putch(unsigned char c,int color );
+inline void putch(char c,int color );
 inline void kPrintf(const char *s,int color, ...)
 {
 	
@@ -50,7 +50,7 @@ inline void kPrintf(const char *s,int color, ...)
 	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
 	for(int i = 0;i< strlen_Const(s)*2;i+=2)
 	{
-		x_pos++;
+		
 		
 		if(s[j] == '\n' || x_pos == Cols)
 		{
@@ -63,7 +63,7 @@ inline void kPrintf(const char *s,int color, ...)
 		}
 		if(s[j] == '%')
 		{
-			x_pos--;
+			
 			switch(s[j+1])//find what format it is in 
 			{
 				case 'i':
@@ -91,9 +91,7 @@ inline void kPrintf(const char *s,int color, ...)
 		
 		else// if no format detected just print char
 		{	//Write Letter to Video Memory 
-			unsigned char * c = (unsigned char*)location;
-			c[i] = s[j];
-			c[i+1] = color; 
+			putch(s[j],color);
 			j++;
 		
 		}
@@ -119,26 +117,24 @@ inline void itoa(int n, int color,int base)
 		s[i] = (remainder > 9)? (remainder-10) + 'A' : remainder + '0';
 		i++;
 	}
-	int j = strlen(s) - 1;
-	for(i = 0;i< strlen(s)*2;i+=2)
+	
+	for(int j = strlen(s) - 1; j >= 0 ;j--)
 	{
-		c = (unsigned char*)location;
-		c[i] = s[j];
-		c[i+1] = color;
-		j--;
-		x_pos++;
+		putch(s[j],color);
+		
 	}
 	
 
 	
 	
 }
-inline void putch(unsigned char c,int color )
+inline void putch(char c,int color )
 {
 	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
 	unsigned char * s = (unsigned char*)location;
 	s[0] = c;
 	s[1] = color;
+	x_pos++;
 }
 
 
