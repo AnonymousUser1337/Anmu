@@ -44,13 +44,14 @@ unsigned const int Cols = 80;
 inline void kPrintf(const char *s, int color)
 {
 	
-	//location  = VIDEO_MEM+(((Cols*2) * y_pos )+ ((x_pos *2)));
+	
 	int j = 0;
+	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
 	for(int i = 0;i< strlen_Const(s)*2;i+=2)
 	{
 		x_pos++;
-		//Write Letter to Video Memory which writes the letter to the screen
-		if(s[j] == '\n' || x_pos == Cols)
+		
+		if(s[j] == '\n' || x_pos == Cols || s[j] == '\r')
 		{
 			x_pos = 0;//
 			y_pos++;//go to the next line
@@ -60,7 +61,8 @@ inline void kPrintf(const char *s, int color)
 			j++;//skip the new line character
 		}
 		
-		location = VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
+		
+		//Write Letter to Video Memory 
 		unsigned char * c = (unsigned char*)location;
 		c[i] = s[j];
 		c[i+1] = color; 
