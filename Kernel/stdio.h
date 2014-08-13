@@ -1,4 +1,3 @@
-
 #define BLACK 0x0
 #define BLUE 0x01
 #define GREEN 0x02
@@ -32,7 +31,8 @@
 //13 - Light Magenta
 //14 - Light Brown
 //15 - White
-unsigned int VIDEO_MEM = 0xB8000;
+#define VIDEO_MEM 0xB8000
+unsigned int location = VIDEO_MEM;
 unsigned int x_pos = 0;
 unsigned int y_pos = 0;
 unsigned const int Cols = 80;
@@ -44,30 +44,31 @@ unsigned const int Cols = 80;
 inline void kPrintf(const char *s, int color)
 {
 	
-	VIDEO_MEM += (((Cols*2) * y_pos )+ (x_pos * 2));
+	location  = VIDEO_MEM+(((Cols*2) * y_pos )+ ((x_pos *2)));
 	char * c;
+	c = (char*)location;
 	int j = 0;
 	for(int i = 0;i< strlen_Const(s)*2;i+=2)
 	{
-		
+		x_pos++;
 		//Write Letter to Video Memory which writes the letter to the screen
 		if(s[j] == '\n' || x_pos == Cols)
 		{
+			x_pos = 0;
 			y_pos++;
-			x_pos = -1;
+			
+			
 			
 			j++;//skip the new line character
 		}
-	
 		
-		x_pos++;
-		c = (char*)VIDEO_MEM;/*Point the string to the VIDEO MEMORY */
+		location = VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
 		c[i] = s[j];
 		c[i+1] = color; 
 		j++;
+		c = (char*)location;/*Point the string to the VIDEO MEMORY */
 		
 		
 	}
-	c = 0;
 	
 }
