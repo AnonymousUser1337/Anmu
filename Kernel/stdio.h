@@ -49,21 +49,22 @@ inline void kPrintf(const char *s, int color)
 	int j = 0;
 	for(int i = 0;i< strlen_Const(s)*2;i+=2)
 	{
-		c = (char*)VIDEO_MEM;/*Point the string to the VIDEO MEMORY */
+		
 		//Write Letter to Video Memory which writes the letter to the screen
 		if(s[j] == '\n' || x_pos == Cols)
 		{
 			y_pos++;
 			x_pos = 0;
-			VIDEO_MEM = VIDEO_MEM+ (((Cols*2) * y_pos )+ (x_pos * 2)); //set the new location
 			j++;//skip the new line character
 		}
+		
+		c = (char*)VIDEO_MEM;/*Point the string to the VIDEO MEMORY */
 		c[i] = s[j];
 		c[i+1] = color; 
 		j++;
 		x_pos++;
 		
 	}
-	
+	c = 0;
 	
 }
