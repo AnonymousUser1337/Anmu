@@ -47,6 +47,7 @@ inline void kPrintf(const char *s, int color)
 	VIDEO_MEM += (((Cols*2) * y_pos )+ (x_pos * 2));
 	char * c;
 	int j = 0;
+	c = (char*)VIDEO_MEM;/*Point the string to the VIDEO MEMORY */
 	for(int i = 0;i< strlen_Const(s)*2;i+=2)
 	{
 		
@@ -58,7 +59,7 @@ inline void kPrintf(const char *s, int color)
 			j++;//skip the new line character
 		}
 		
-		c = (char*)VIDEO_MEM;/*Point the string to the VIDEO MEMORY */
+		
 		c[i] = s[j];
 		c[i+1] = color; 
 		j++;
