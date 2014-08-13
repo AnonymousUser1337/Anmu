@@ -41,6 +41,7 @@ unsigned const int Cols = 80;
 
 inline void itoa(int, int);
 inline void putch(unsigned char c,int color );
+inline void hitoa(int, int);
 inline void kPrintf(const char *s,int color, ...)
 {
 	
@@ -77,7 +78,11 @@ inline void kPrintf(const char *s,int color, ...)
 				case 'c':
 				putch((unsigned char)va_arg(list, int), color);//print out char 
 				break;
+				case 'x':
+				
+				break;
 			}
+			x_pos++;
 			j+=2;
 		}
 		
@@ -98,16 +103,25 @@ inline void itoa(int n, int color)
 {
 	int remainder = 0;
 	int i = 0;
-	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
-	while(n!=0)
+
+	char *s = 0;
+	while(n>=1)
 	{
 		
 		remainder = n%10;
 		n = n/10;
-		unsigned char * c = (unsigned char*)location - 2;
-		c[i] = remainder + 0x30;
+		s[i] = remainder + 0x30;
+		i++;
+	}
+	int j = i - 1;
+	x_pos--;
+	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
+	for(int i = 0;i< strlen(s)*2;i+=2)
+	{
+		unsigned char *c = (unsigned char*)location;
+		c[i] = s[j];
 		c[i+1] = color;
-		i+=2;
+		j--;
 	}
 	
 	
