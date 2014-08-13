@@ -82,6 +82,7 @@ inline void kPrintf(const char *s,int color, ...)
 				case 'x':
 					
 					kPrintf("0x",color);
+					
 					itoa(va_arg(list,int), color, 16);
 				break;
 			}
@@ -106,8 +107,8 @@ inline void itoa(int n, int color,int base)
 {
 	int remainder = 0;
 	int i = 0;
-	char *s = 0;
-	
+	char *s  = 0;
+	unsigned char * c ;
 	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
 	while(n != 0)
 	{
@@ -119,10 +120,9 @@ inline void itoa(int n, int color,int base)
 		i++;
 	}
 	int j = strlen(s) - 1;
-	unsigned char * c = (unsigned char*)location;
 	for(i = 0;i< strlen(s)*2;i+=2)
 	{
-		
+		c = (unsigned char*)location;
 		c[i] = s[j];
 		c[i+1] = color;
 		j--;
