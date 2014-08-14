@@ -31,11 +31,13 @@
 //14 - Light Brown
 //15 - White
 #define VIDEO_MEM 0xB8000
+#define Cols 80
 #include <stdarg.h>
-unsigned int location = VIDEO_MEM;
+
+int location = VIDEO_MEM;
 int x_pos = 0;
 int y_pos = 0;
-unsigned const int Cols = 80;
+
 void itoa(int, int, int);
 void putch(char c,int color );
 void kPrintf(const char *s,int color, ...);
@@ -50,10 +52,16 @@ void kMain(void)
 {	
 	int Color = LIGHT_BLUE;
 	int Color2 = LIGHT_RED;
+	const char *dir = "~/root";
 	
-	kPrintf("Anmu@Computer",Color);
-	kPrintf(" ~/root\n#", Color2);
-	
+	kPrintf("Anmu OS v0.01 Alpha\n",LIGHT_GREEN);
+	kPrintf("CopyRight (c) 2014 Yeshua Colon\n",LIGHT_GREEN);
+	putch('[',LIGHT_GREEN);
+	kPrintf("Anmu@Computer ",Color);
+	kPrintf("%s", Color2,dir);
+	putch(']',LIGHT_GREEN);
+	putch('#',LIGHT_CYAN );
+	kPrintf("\n", 0);
 	
 }
 
@@ -65,19 +73,12 @@ void kPrintf(const char *s,int color, ...)
     va_start( list, color );
 	int j = 0;
 	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
+	int k = 0;
 	for(int i = 0;i< strlen_Const(s)*2;i+=2)
 	{
 		
 		
-		if(s[j] == '\n' || x_pos == Cols)
-		{
-			x_pos = 0;//
-			y_pos++;//go to the next line
-			
-			
-			
-			j++;//skip the new line character
-		}
+		
 		if(s[j] == '%')//see if there is something to be formated into the string 
 		{
 			
@@ -85,25 +86,47 @@ void kPrintf(const char *s,int color, ...)
 			{
 				case 'i':
 				case 'd':
-					
 					itoa(va_arg(list, int), color, 10);//print out an integer
 				break;
+				
 				case 's':
-					 
-					kPrintf(va_arg(list,const char*), color);//print out the string
+					k++;//increments if there is a formatted string
+					kPrintf((const char*)va_arg(list,const char*), color);//print out the string
 				break;
+				
 				case 'c':
-					
-					putch((unsigned char)va_arg(list, int), color);//print out char 
+					putch((char)va_arg(list, int), color);//print out char 
 				break;
+				
 				case 'X':
 				case 'x':
 					itoa(va_arg(list,int), color, 16);//print out number in hex
 				break;
 			}
-			j+=2;
+			j+=2;//skip the format types
 		}
-		
+		else if(s[j] == '\n' || x_pos == Cols)
+		{
+			/*for some reason formatted strings with a new line in the same print make 
+			the next print print in the wrong location Note: Must come back to this*/
+			if(k!=0)//if there is a formatted string set the location back
+			{
+				x_pos = -2;//sets the location
+				y_pos++;//go to the next line
+				j++;
+				putch(s[j],color);
+			}
+			else
+			{
+				x_pos = -1;//
+				y_pos++;//go to the next line
+				j++;
+				putch(s[j],color);
+			}
+			
+			
+			
+		}
 		else// if no format detected just print char
 		{	//Write Letter to Video Memory 
 			putch(s[j],color);
