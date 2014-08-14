@@ -1,4 +1,3 @@
-
 #define BLACK 0x0
 #define BLUE 0x01
 #define GREEN 0x02
@@ -33,7 +32,6 @@
 //15 - White
 #define VIDEO_MEM 0xB8000
 #include <stdarg.h>
-#include "strings.h"
 unsigned int location = VIDEO_MEM;
 unsigned int x_pos = 0;
 unsigned int y_pos = 0;
@@ -41,6 +39,8 @@ unsigned const int Cols = 80;
 void itoa(int, int, int);
 void putch(char c,int color );
 void kPrintf(const char *s,int color, ...);
+int strlen_Const(const char * s);
+int strlen(char * s);
 
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kMain. */
@@ -50,7 +50,7 @@ void kMain(void)
 	int Color = LIGHT_BLUE;
 	int Color2 = LIGHT_RED;
 
-	kPrintf("Anmu@Computer",Color1);
+	kPrintf("Anmu@Computer",Color);
 	kPrintf("~/root#\n", Color2);
 	
 }
@@ -153,4 +153,20 @@ void putch(char c,int color )
 }
 
 
+int strlen_Const(const char * s)
+{	int length = 0;
+	for (length = 0;*s != '\0'; ++s)
+	{	length++;
+	}
+	return length;
+}
+
+int strlen(char * s)
+{	int length = 0;
+	for (length = 0;*s != '\0'; ++s)
+	{	
+		length++;
+	}
+	return length;
+}
 
