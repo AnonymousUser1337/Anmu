@@ -41,7 +41,8 @@ void putch(char c,int color );
 void kPrintf(const char *s,int color, ...);
 int strlen_Const(const char * s);
 int strlen(char * s);
-inline void outb(unsigned int port,unsigned char value);
+static inline void outb(unsigned int port,unsigned char value);
+void update_cursor();
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kMain. */
 #endif
@@ -51,7 +52,8 @@ void kMain(void)
 	int Color2 = LIGHT_RED;
 	
 	kPrintf("Anmu@Computer",Color);
-	kPrintf("~/root#\n", Color2);
+	kPrintf(" ~/root\n#", Color2);
+	
 	
 }
 
@@ -69,14 +71,14 @@ void kPrintf(const char *s,int color, ...)
 		
 		if(s[j] == '\n' || x_pos == Cols)
 		{
-			x_pos = -1;//
+			x_pos = 0;//
 			y_pos++;//go to the next line
 			
 			
 			
 			j++;//skip the new line character
 		}
-		if(s[j] == '%')
+		if(s[j] == '%')//see if there is something to be formated into the string 
 		{
 			
 			switch(s[j+1])//find what format it is in 
@@ -84,7 +86,7 @@ void kPrintf(const char *s,int color, ...)
 				case 'i':
 				case 'd':
 					
-					itoa(va_arg(list, int), color, 10);
+					itoa(va_arg(list, int), color, 10);//print out an integer
 				break;
 				case 's':
 					 
@@ -96,7 +98,7 @@ void kPrintf(const char *s,int color, ...)
 				break;
 				case 'X':
 				case 'x':
-					itoa(va_arg(list,int), color, 16);
+					itoa(va_arg(list,int), color, 16);//print out number in hex
 				break;
 			}
 			j+=2;
@@ -137,7 +139,7 @@ void itoa(int n, int color,int base)
 		i++;
 	}
 	
-	for(int j = strlen(s) - 1; j >= 0 ;j--)
+	for(int j = strlen(s) - 1; j >= 0 ;j--)//Print the string in reverse to get the right number on the screen
 	{
 		putch(s[j],color);
 		
@@ -147,17 +149,18 @@ void itoa(int n, int color,int base)
 	
 	
 }
-void putch(char c,int color )
+void putch(char c,int color)
 {
+	//Print a character to the video memory
 	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
-	unsigned char * s = (unsigned char*)location;
+	char * s = (char*)location;
 	s[0] = c;
 	s[1] = color;
 	x_pos++;
 }
 
 
-int strlen_Const(const char * s)
+int strlen_Const(const char * s)//Get the length of the string constant
 {	int length = 0;
 	for (length = 0;*s != '\0'; ++s)
 	{	length++;
@@ -165,7 +168,7 @@ int strlen_Const(const char * s)
 	return length;
 }
 
-int strlen(char * s)
+int strlen(char * s)//get the length of the string 
 {	int length = 0;
 	for (length = 0;*s != '\0'; ++s)
 	{	
@@ -173,8 +176,18 @@ int strlen(char * s)
 	}
 	return length;
 }
+void update_cursor()
+{
+    unsigned char cursor_loc=(y_pos*Cols) + x_pos;
 
-inline void outb(unsigned int port,unsigned char value)
+    outb(0x3D4, 14);
+    outb(0x3D5, cursor_loc>> 8);
+    outb(0x3D4, 15);
+    outb(0x3D5, cursor_loc);
+}
+static inline void outb(unsigned int port,unsigned char value)
 {
    asm volatile ("outb %%al,%%dx": :"d" (port), "a" (value));
 }
+
+
