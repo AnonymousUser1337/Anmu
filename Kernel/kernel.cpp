@@ -33,15 +33,15 @@
 #define VIDEO_MEM 0xB8000
 #include <stdarg.h>
 unsigned int location = VIDEO_MEM;
-unsigned int x_pos = 0;
-unsigned int y_pos = 0;
+int x_pos = 0;
+int y_pos = 0;
 unsigned const int Cols = 80;
 void itoa(int, int, int);
 void putch(char c,int color );
 void kPrintf(const char *s,int color, ...);
 int strlen_Const(const char * s);
 int strlen(char * s);
-
+inline void outb(unsigned int port,unsigned char value);
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kMain. */
 #endif
@@ -49,7 +49,7 @@ void kMain(void)
 {	
 	int Color = LIGHT_BLUE;
 	int Color2 = LIGHT_RED;
-
+	
 	kPrintf("Anmu@Computer",Color);
 	kPrintf("~/root#\n", Color2);
 	
@@ -69,7 +69,7 @@ void kPrintf(const char *s,int color, ...)
 		
 		if(s[j] == '\n' || x_pos == Cols)
 		{
-			x_pos = 0;//
+			x_pos = -1;//
 			y_pos++;//go to the next line
 			
 			
@@ -94,10 +94,8 @@ void kPrintf(const char *s,int color, ...)
 					
 					putch((unsigned char)va_arg(list, int), color);//print out char 
 				break;
+				case 'X':
 				case 'x':
-					
-					kPrintf("0x",color);
-					
 					itoa(va_arg(list,int), color, 16);
 				break;
 			}
@@ -112,6 +110,7 @@ void kPrintf(const char *s,int color, ...)
 		}
 		
 	}
+	
 	va_end(list);
 	
 }
@@ -123,6 +122,11 @@ void itoa(int n, int color,int base)
 	char s[100];
 	unsigned char * c ;
 	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
+	if(base == 16)
+	{
+		kPrintf("0x",color);
+	
+	}
 	while(n != 0)
 	{
 		
@@ -170,3 +174,7 @@ int strlen(char * s)
 	return length;
 }
 
+inline void outb(unsigned int port,unsigned char value)
+{
+   asm volatile ("outb %%al,%%dx": :"d" (port), "a" (value));
+}
