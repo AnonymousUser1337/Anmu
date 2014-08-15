@@ -43,8 +43,8 @@ void putch(char c,int color );
 void kPrintf(const char *s,int color, ...);
 int strlen_Const(const char * s);
 int strlen(char * s);
-static inline void outb(unsigned int port,unsigned char value);
-void update_cursor();
+//inline void outb(unsigned int port,unsigned char value);
+//void update_cursor();
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kMain. */
 #endif
@@ -52,91 +52,71 @@ void kMain(void)
 {	
 	int Color = LIGHT_BLUE;
 	int Color2 = LIGHT_RED;
+	int Color3 = LIGHT_GREEN;
+	int Color4 = LIGHT_CYAN;
 	const char *dir = "~/root";
-	
-	kPrintf("Anmu OS v0.01 Alpha\n",LIGHT_GREEN);
-	kPrintf("CopyRight (c) 2014 Yeshua Colon\n",LIGHT_GREEN);
-	putch('[',LIGHT_GREEN);
+	int year = 2014;
+	kPrintf("Anmu OS v0.01 Alpha CLI \n",Color);
+	kPrintf("CopyRight (c) %d Yeshua Colon\n",Color2, year);
+	kPrintf("[",Color3);
 	kPrintf("Anmu@Computer ",Color);
-	kPrintf("%s", Color2,dir);
-	putch(']',LIGHT_GREEN);
-	putch('#',LIGHT_CYAN );
+	kPrintf("%s",Color2, dir);
+	kPrintf("]", Color3);
+	kPrintf("#",Color4);
 	kPrintf("\n", 0);
-	
 }
 
 
 void kPrintf(const char *s,int color, ...)
 {
 	
-	va_list list;
-    va_start( list, color );
-	int j = 0;
-	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
-	int k = 0;
-	for(int i = 0;i< strlen_Const(s)*2;i+=2)
-	{
-		
-		
-		
-		if(s[j] == '%')//see if there is something to be formated into the string 
-		{
+	va_list list;//create list of arguments
+    va_start( list, color );//declare this the start
+	for(int i = 0;i< strlen_Const(s);i++)
+	{		
 			
-			switch(s[j+1])//find what format it is in 
+			if(s[i] == '%')
 			{
-				case 'i':
-				case 'd':
-					itoa(va_arg(list, int), color, 10);//print out an integer
-				break;
+				switch(s[i+1])//check for the right format
+				{
+					case 'i':
+					case 'd':
+						itoa(va_arg(list, int), color, 10);//print integer
+						i+=2;//skip the format
+					break;
+					case 'c':
+						x_pos--;
+						putch((char)va_arg(list, int), color);
+						i+=2;//skip the format
+					break;
+					case 's':
+						kPrintf(va_arg(list, const char *),color);//print out string
+						i+=2;//skip the format
+					break;
+					case 'X':
+					case 'x':
+						itoa(va_arg(list, int), color, 16);//print integer in hex
+						i+=2;//skip the format
+					break;
+				}
 				
-				case 's':
-					k++;//increments if there is a formatted string
-					kPrintf((const char*)va_arg(list,const char*), color);//print out the string
-				break;
 				
-				case 'c':
-					putch((char)va_arg(list, int), color);//print out char 
-				break;
-				
-				case 'X':
-				case 'x':
-					itoa(va_arg(list,int), color, 16);//print out number in hex
-				break;
 			}
-			j+=2;//skip the format types
-		}
-		else if(s[j] == '\n' || x_pos == Cols)
-		{
-			/*for some reason formatted strings with a new line in the same print make 
-			the next print print in the wrong location Note: Must come back to this*/
-			if(k!=0)//if there is a formatted string set the location back
+			if(x_pos>=Cols || s[i] == '\n' )
 			{
-				x_pos = -2;//sets the location
-				y_pos++;//go to the next line
-				j++;
-				putch(s[j],color);
+				//create a new line
+				x_pos = -1;
+				y_pos++;
+				i++;
+			
 			}
-			else
-			{
-				x_pos = -1;//
-				y_pos++;//go to the next line
-				j++;
-				putch(s[j],color);
-			}
+			putch(s[i],color);//write character to line
 			
 			
 			
-		}
-		else// if no format detected just print char
-		{	//Write Letter to Video Memory 
-			putch(s[j],color);
-			j++;
-		
-		}
-		
 	}
 	
-	va_end(list);
+	va_end(list);//declare the last
 	
 }
 
@@ -145,14 +125,13 @@ void itoa(int n, int color,int base)
 	int remainder = 0;
 	int i = 0;
 	char s[100];
-	unsigned char * c ;
-	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
+	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));//calculate location
 	if(base == 16)
 	{
-		kPrintf("0x",color);
+		kPrintf("0x",color);//identify as hex
 	
 	}
-	while(n != 0)
+	while(n != 0)//get the number and convert to string
 	{
 		
 		remainder = n%base;
@@ -164,7 +143,8 @@ void itoa(int n, int color,int base)
 	
 	for(int j = strlen(s) - 1; j >= 0 ;j--)//Print the string in reverse to get the right number on the screen
 	{
-		putch(s[j],color);
+		putch(s[j],color);//print character to screen
+		
 		
 	}
 	
@@ -173,12 +153,13 @@ void itoa(int n, int color,int base)
 	
 }
 void putch(char c,int color)
-{
+{	
 	//Print a character to the video memory
 	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
 	char * s = (char*)location;
 	s[0] = c;
 	s[1] = color;
+	//update_cursor();//Not working should be updating the position of the cursor
 	x_pos++;
 }
 
@@ -198,19 +179,5 @@ int strlen(char * s)//get the length of the string
 		length++;
 	}
 	return length;
-}
-void update_cursor()
-{
-    unsigned char cursor_loc=(y_pos*Cols) + x_pos;
 
-    outb(0x3D4, 14);
-    outb(0x3D5, cursor_loc>> 8);
-    outb(0x3D4, 15);
-    outb(0x3D5, cursor_loc);
 }
-static inline void outb(unsigned int port,unsigned char value)
-{
-   asm volatile ("outb %%al,%%dx": :"d" (port), "a" (value));
-}
-
-
