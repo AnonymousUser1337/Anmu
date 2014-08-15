@@ -4,6 +4,7 @@
 global _Start:
 _Start: 
  extern kMain
+ ;extern start_ctors, end_ctors, start_dtors, end_dtors
  jmp  main 
 
 ;;;;;;;;;;;;;;;;;; 
@@ -217,27 +218,6 @@ main:
 			
 			call clear_64
 			
-			; Display "Hello World!" in red and white
-			MOV EDI, VIDEO_MEM
-			mov rax, 0x4F6C4F6C4F654F48    
-			mov [edi],rax
- 
-			mov rax, 0x4F6F4F574F204F6F
-			mov [edi + 8], rax
- 
-			mov rax, 0x4F214F644F6C4F72
-			mov [edi + 16], rax
-			MOV EDI, VIDEO_MEM
-			mov rax, 0x4F6C4F6C4F654F48    
-			mov [edi],rax
- 
-			mov rax, 0x4F6F4F574F204F6F
-			mov [edi + 8], rax
- 
-			mov rax, 0x4F214F644F6C4F72
-			mov [edi + 16], rax
-			
-			
 			call kMain
 			
 		cli
@@ -247,7 +227,7 @@ main:
 		 ; Blank out the screen to a blue color.
 			mov edi, VIDEO_MEM
 			mov rcx, 500                      ; Since we are clearing QWORDs over here, we put the count as Count/4.
-			mov rax, RED_B       ; Set the value to set the screen to: Red background, white foreground, blank spaces.
+			mov rax, 0x0F     ; Set the value to set the screen to: Black background, white foreground, blank spaces.
 			rep stosq                         ; Clear the entire screen. 
 		ret
         
