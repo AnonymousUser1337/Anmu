@@ -45,6 +45,8 @@ int strlen_Const(const char * s);
 int strlen(char * s);
 static inline void outb(unsigned port, unsigned char value);
 void update_cursor();
+void enable_cursor();
+static inline unsigned char inb(unsigned short port);
 //inline void outb(unsigned int port,unsigned char value);
 //void update_cursor();
 #if defined(__cplusplus)
@@ -58,6 +60,7 @@ void kMain(void)
 	int Color4 = LIGHT_CYAN;
 	const char *dir = "~/root";
 	int year = 2014;
+	enable_cursor();
 	kPrintf("Anmu OS v0.01 Alpha CLI \n",Color);
 	kPrintf("CopyRight (c) %d Yeshua Colon\n",Color2, year);
 	putch('[',Color3);
@@ -73,7 +76,7 @@ void kPrintf(const char *s,int color, ...)
 {
 	
 	va_list list;//create list of arguments
-        va_start( list, color );//declare this the start
+    va_start( list, color );//declare this the start
 	for(int i = 0;i< strlen_Const(s);i++)
 	{		
 			
@@ -186,9 +189,9 @@ int strlen(char * s)//get the length of the string
 }
 void update_cursor()
 {
-    unsigned char cursor_loc = (y_pos*Cols)+x_pos;
-     // cursor LOW port to vga INDEX register
-    outb(0x3D4, 0x0F);
+	unsigned char cursor_loc = (y_pos*Cols)+x_pos;
+	 // cursor LOW port to vga INDEX register
+	outb(0x3D4, 0x0F);
     outb(0x3D5, (unsigned char)(cursor_loc));
     // cursor HIGH port to vga INDEX register
     outb(0x3D4, 0x0E);
@@ -200,4 +203,22 @@ static inline void outb(unsigned int port, unsigned char value)
 {
 	asm volatile("out %%al, %%dx"::"d"(port),"a"(value));
 	
+}
+void enable_cursor()
+{
+	outb(0x3D4, 0x0A);
+	char curstart = inb(0x3D5) & 0x1F; // get cursor scanline start
+	//kPrintf("%d\n", LIGHT_GREEN, curstart);
+	outb(0x3D4, 0x0A);
+	outb(0x3D5, curstart | 0x20); // set enable bit
+
+}
+static inline unsigned char inb(unsigned short port)
+{
+    unsigned char ret;
+    asm volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
+    /* TODO: Is it wrong to use 'N' for the port? It's not a 8-bit constant. */
+    /* TODO: Should %1 be %w1? */
+    /* TODO: Is there any reason to force the use of eax and edx? */
+    return ret;
 }
