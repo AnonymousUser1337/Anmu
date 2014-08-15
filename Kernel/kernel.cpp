@@ -43,6 +43,8 @@ void putch(char c,int color );
 void kPrintf(const char *s,int color, ...);
 int strlen_Const(const char * s);
 int strlen(char * s);
+static inline void outb(unsigned port, unsigned char value);
+void update_cursor();
 //inline void outb(unsigned int port,unsigned char value);
 //void update_cursor();
 #if defined(__cplusplus)
@@ -58,10 +60,10 @@ void kMain(void)
 	int year = 2014;
 	kPrintf("Anmu OS v0.01 Alpha CLI \n",Color);
 	kPrintf("CopyRight (c) %d Yeshua Colon\n",Color2, year);
-	kPrintf("[",Color3);
+	putch('[',Color3);
 	kPrintf("Anmu@Computer ",Color);
 	kPrintf("%s",Color2, dir);
-	kPrintf("]", Color3);
+	putch(']',Color3);
 	kPrintf("#",Color4);
 	kPrintf("\n", 0);
 }
@@ -85,7 +87,6 @@ void kPrintf(const char *s,int color, ...)
 						i+=2;//skip the format
 					break;
 					case 'c':
-						x_pos--;
 						putch((char)va_arg(list, int), color);
 						i+=2;//skip the format
 					break;
@@ -105,17 +106,19 @@ void kPrintf(const char *s,int color, ...)
 			if(x_pos>=Cols || s[i] == '\n' )
 			{
 				//create a new line
-				x_pos = -1;
+				x_pos = 0;
 				y_pos++;
 				i++;
-			
+				
 			}
-			putch(s[i],color);//write character to line
-			
+			if(s[i]!='\0')//if not end then print char 
+			{
+				putch(s[i],color);//write character to line
+			}
 			
 			
 	}
-	
+	update_cursor();
 	va_end(list);//declare the last
 	
 }
@@ -180,4 +183,21 @@ int strlen(char * s)//get the length of the string
 	}
 	return length;
 
+}
+void update_cursor()
+{
+	unsigned char cursor_loc = (y_pos*Cols)+x_pos;
+	 // cursor LOW port to vga INDEX register
+	outb(0x3D4, 0x0A);
+    outb(0x3D5, (unsigned char)(cursor_loc));
+    // cursor HIGH port to vga INDEX register
+    outb(0x3D4, 0x0A);
+    outb(0x3D5, (unsigned char)((cursor_loc>>8)));
+	
+	
+}
+static inline void outb(unsigned int port, unsigned char value)
+{
+	asm volatile("out %%al, %%dx"::"d"(port),"a"(value));
+	
 }
