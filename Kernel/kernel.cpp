@@ -43,7 +43,7 @@ void putch(char c,int color );
 void kPrintf(const char *s,int color, ...);
 int strlen_Const(const char * s);
 int strlen(char * s);
-static inline void outb(unsigned port, unsigned char value);
+static inline void outb(unsigned short port, unsigned char value);
 void update_cursor();
 void enable_cursor();
 static inline unsigned char inb(unsigned short port);
@@ -60,7 +60,7 @@ void kMain(void)
 	int Color4 = LIGHT_CYAN;
 	const char *dir = "~/root";
 	int year = 2014;
-	enable_cursor();
+		update_cursor();
 	kPrintf("Anmu OS v0.01 Alpha CLI \n",Color);
 	kPrintf("CopyRight (c) %d Yeshua Colon\n",Color2, year);
 	putch('[',Color3);
@@ -69,6 +69,8 @@ void kMain(void)
 	putch(']',Color3);
 	kPrintf("#",Color4);
 	kPrintf("\n", 0);
+
+	while(1==1);
 }
 
 
@@ -123,7 +125,7 @@ void kPrintf(const char *s,int color, ...)
 	}
 	
 	va_end(list);//declare the last
-	update_cursor();
+
 }
 
 void itoa(int n, int color,int base)
@@ -167,6 +169,7 @@ void putch(char c,int color)
 	s[1] = color;
 	//update_cursor();//Not working should be updating the position of the cursor
 	x_pos++;
+	update_cursor();
 }
 
 
@@ -189,25 +192,28 @@ int strlen(char * s)//get the length of the string
 }
 void update_cursor()
 {
-	unsigned char cursor_loc = (y_pos*Cols)+x_pos;
+	
+	unsigned short cursor_loc = (y_pos*Cols)+x_pos;
 	 // cursor LOW port to vga INDEX register
-	outb(0x3D4, 0x0F);
-    outb(0x3D5, (unsigned char)(cursor_loc));
+ 
+    // cursor LOW port to vga INDEX register
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (unsigned char)(cursor_loc&0xFF));
     // cursor HIGH port to vga INDEX register
     outb(0x3D4, 0x0E);
-    outb(0x3D5, (unsigned char)((cursor_loc>>8)));
+    outb(0x3D5, (unsigned char )((cursor_loc>>8)&0xFF));
 	
 	
 }
-static inline void outb(unsigned int port, unsigned char value)
+static inline void outb(unsigned short port, unsigned char value)
 {
-	asm volatile("out %%al, %%dx"::"d"(port),"a"(value));
-	
+    asm volatile ( "outb %0, %1" : : "a"(value), "Nd"(port) );
+    
 }
 void enable_cursor()
 {
 	outb(0x3D4, 0x0A);
-	char curstart = inb(0x3D5) & 0x1F; // get cursor scanline start
+	unsigned char curstart = inb(0x3D5) & 0x1F; // get cursor scanline start
 	//kPrintf("%d\n", LIGHT_GREEN, curstart);
 	outb(0x3D4, 0x0A);
 	outb(0x3D5, curstart | 0x20); // set enable bit
@@ -217,8 +223,13 @@ static inline unsigned char inb(unsigned short port)
 {
     unsigned char ret;
     asm volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
-    /* TODO: Is it wrong to use 'N' for the port? It's not a 8-bit constant. */
-    /* TODO: Should %1 be %w1? */
-    /* TODO: Is there any reason to force the use of eax and edx? */
     return ret;
 }
+
+
+
+
+
+
+
+
