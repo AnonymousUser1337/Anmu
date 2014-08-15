@@ -73,7 +73,7 @@ void kPrintf(const char *s,int color, ...)
 {
 	
 	va_list list;//create list of arguments
-    va_start( list, color );//declare this the start
+        va_start( list, color );//declare this the start
 	for(int i = 0;i< strlen_Const(s);i++)
 	{		
 			
@@ -118,9 +118,9 @@ void kPrintf(const char *s,int color, ...)
 			
 			
 	}
-	update_cursor();
-	va_end(list);//declare the last
 	
+	va_end(list);//declare the last
+	update_cursor();
 }
 
 void itoa(int n, int color,int base)
@@ -186,12 +186,12 @@ int strlen(char * s)//get the length of the string
 }
 void update_cursor()
 {
-	unsigned char cursor_loc = (y_pos*Cols)+x_pos;
-	 // cursor LOW port to vga INDEX register
-	outb(0x3D4, 0x0A);
+    unsigned char cursor_loc = (y_pos*Cols)+x_pos;
+     // cursor LOW port to vga INDEX register
+    outb(0x3D4, 0x0F);
     outb(0x3D5, (unsigned char)(cursor_loc));
     // cursor HIGH port to vga INDEX register
-    outb(0x3D4, 0x0A);
+    outb(0x3D4, 0x0E);
     outb(0x3D5, (unsigned char)((cursor_loc>>8)));
 	
 	
