@@ -19,9 +19,7 @@ _Start:
 %DEFINE VIDEO_MEM 0xB8000 
 %DEFINE COLS    80                      ; width and height of screen 
 %DEFINE LINES   25 
-%DEFINE TEAL_B 0x3F203F203F203F20
-%DEFINE BLUE_B 0x1F201F201F201F20
-%DEFINE RED_B 0x4F204F204F204F20
+%DEFINE BLACK_BACKGROUND 0x0F200F200F200F20 
 
 X_POS:  db 0 
 Y_POS:  db 0 
@@ -167,9 +165,9 @@ main:
         mov ss,ax
 		
 		call clear
-		xor bx, bx
-		mov bx, Entered_PMODE
-		call sPrint
+		;xor bx, bx
+		;mov bx, Entered_PMODE
+		;call sPrint
 		
         mov eax,cr4
         or  eax,1 << 5
@@ -227,7 +225,7 @@ main:
 		 ; Blank out the screen to a blue color.
 			mov edi, VIDEO_MEM
 			mov rcx, 500                      ; Since we are clearing QWORDs over here, we put the count as Count/4.
-			mov rax, 0x0F     ; Set the value to set the screen to: Black background, white foreground, blank spaces.
+			mov rax, BLACK_BACKGROUND     ; Set the value to set the screen to: Black background, white foreground, blank spaces.
 			rep stosq                         ; Clear the entire screen. 
 		ret
         
