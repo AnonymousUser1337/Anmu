@@ -32,6 +32,7 @@
 //15 - White
 #define VIDEO_MEM 0xB8000
 #define Cols 80
+#define ASM_LINK extern "C"
 #include <stdarg.h>
 
 int location = VIDEO_MEM;
@@ -43,16 +44,12 @@ void putch(char c,int color );
 void kPrintf(const char *s,int color, ...);
 int strlen_Const(const char * s);
 int strlen(char * s);
-static inline void outb(unsigned short port, unsigned char value);
 void update_cursor();
 void enable_cursor();
 static inline unsigned char inb(unsigned short port);
-//inline void outb(unsigned int port,unsigned char value);
-//void update_cursor();
+static inline void outb(unsigned short port, unsigned char value);
 #if defined(__cplusplus)
-extern "C" /* Use C linkage for kMain. */
-#endif
-void kMain(void)
+ASM_LINK void kMain(void)
 {	
 	int Color = LIGHT_BLUE;
 	int Color2 = LIGHT_RED;
@@ -60,7 +57,7 @@ void kMain(void)
 	int Color4 = LIGHT_CYAN;
 	const char *dir = "~/root";
 	int year = 2014;
-		update_cursor();
+	enable_cursor();
 	kPrintf("Anmu OS v0.01 Alpha CLI \n",Color);
 	kPrintf("CopyRight (c) %d Yeshua Colon\n",Color2, year);
 	putch('[',Color3);
@@ -68,11 +65,11 @@ void kMain(void)
 	kPrintf("%s",Color2, dir);
 	putch(']',Color3);
 	kPrintf("#",Color4);
-	kPrintf("\n", 0);
-
+	//kPrintf("\n", 0);
+	//update_cursor();
 	while(1==1);
 }
-
+#endif
 
 void kPrintf(const char *s,int color, ...)
 {
@@ -213,10 +210,9 @@ static inline void outb(unsigned short port, unsigned char value)
 void enable_cursor()
 {
 	outb(0x3D4, 0x0A);
-	unsigned char curstart = inb(0x3D5) & 0x1F; // get cursor scanline start
-	//kPrintf("%d\n", LIGHT_GREEN, curstart);
+	 char curstart = (inb(0x3D5) & 0x1F); // get cursor scanline start
 	outb(0x3D4, 0x0A);
-	outb(0x3D5, curstart | 0x20); // set enable bit
+	outb(0x3D5, curstart);
 
 }
 static inline unsigned char inb(unsigned short port)
