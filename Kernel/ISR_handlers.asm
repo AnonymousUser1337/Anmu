@@ -1,4 +1,4 @@
-
+;for now just call a common handler for all isr's
 [GLOBAL isr0]
 
 isr0:
@@ -225,6 +225,7 @@ call common_handler
 ret
 [EXTERN ISR_HANDLER]
 common_handler:
+	;preserve registers
 	push rax
 	push rbx
 	push rcx
@@ -237,7 +238,7 @@ common_handler:
 
 	call ISR_HANDLER
 	
-	
+	;restore registers
 	pop rbp
 	pop rdi
 	pop rsi
@@ -246,17 +247,17 @@ common_handler:
 	pop rbx
 	pop rax
 	
-	iretq
+	iretq;return to what the cpu was doing
 	
 	
 ret
 [GLOBAL LOAD_IDT]
 LOAD_IDT:
 
-	cli
+	cli;disable interrupts again just incase
 	
-	LIDT[rsp+4]
+	LIDT[rsp+4];Load the gdt from the stack
 	
-	sti
+	sti;enable interrupts
 
 ret
