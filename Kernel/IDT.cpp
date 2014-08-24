@@ -16,42 +16,40 @@ void initIDT()
 	
 		
 		//set interrupt gates
-		set_Int_Gate(0, (intptr_t) isr0);
-		set_Int_Gate(1, (intptr_t) isr1);
-		set_Int_Gate(2, (intptr_t) isr2);
-		set_Int_Gate(3, (intptr_t) isr3);
-		set_Int_Gate(4, (intptr_t) isr4);
-		set_Int_Gate(5, (intptr_t) isr5);
-		set_Int_Gate(6, (intptr_t) isr6);
-		set_Int_Gate(7, (intptr_t) isr7);
-		set_Int_Gate(8, (intptr_t) isr8);
-		set_Int_Gate(9, (intptr_t) isr9);
-		set_Int_Gate(10, (intptr_t) isr10);
-		set_Int_Gate(11, (intptr_t) isr11);
-		set_Int_Gate(12, (intptr_t) isr12);
-		set_Int_Gate(13, (intptr_t) isr13);
-		set_Int_Gate(14, (intptr_t) isr14);
-		set_Int_Gate(15, (intptr_t) isr15);
-		set_Int_Gate(16, (intptr_t) isr16);
-		set_Int_Gate(17, (intptr_t) isr17);
-		set_Int_Gate(18, (intptr_t) isr18);
-		set_Int_Gate(19, (intptr_t) isr19);
-		set_Int_Gate(20, (intptr_t) isr20);
-		set_Int_Gate(21, (intptr_t) isr21);
-		set_Int_Gate(22, (intptr_t) isr22);
-		set_Int_Gate(23, (intptr_t) isr23);
-		set_Int_Gate(24, (intptr_t) isr24);
-		set_Int_Gate(25, (intptr_t) isr25);
-		set_Int_Gate(26, (intptr_t) isr26);
-		set_Int_Gate(27, (intptr_t) isr27);
-		set_Int_Gate(28, (intptr_t) isr28);
-		set_Int_Gate(29, (intptr_t) isr29);
-		set_Int_Gate(30, (intptr_t) isr30);
-		set_Int_Gate(31, (intptr_t) isr31);
+		set_Int_Gate(0, (intptr_t) &isr0);
+		set_Int_Gate(1, (intptr_t) &isr1);
+		set_Int_Gate(2, (intptr_t) &isr2);
+		set_Int_Gate(3, (intptr_t) &isr3);
+		set_Int_Gate(4, (intptr_t) &isr4);
+		set_Int_Gate(5, (intptr_t) &isr5);
+		set_Int_Gate(6, (intptr_t) &isr6);
+		set_Int_Gate(7, (intptr_t) &isr7);
+		set_Int_Gate(8, (intptr_t) &isr8);
+		set_Int_Gate(9, (intptr_t) &isr9);
+		set_Int_Gate(10, (intptr_t) &isr10);
+		set_Int_Gate(11, (intptr_t) &isr11);
+		set_Int_Gate(12, (intptr_t) &isr12);
+		set_Int_Gate(13, (intptr_t) &isr13);
+		set_Int_Gate(14, (intptr_t) &isr14);
+		set_Int_Gate(15, (intptr_t) &isr15);
+		set_Int_Gate(16, (intptr_t) &isr16);
+		set_Int_Gate(17, (intptr_t) &isr17);
+		set_Int_Gate(18, (intptr_t) &isr18);
+		set_Int_Gate(19, (intptr_t) &isr19);
+		set_Int_Gate(20, (intptr_t) &isr20);
+		set_Int_Gate(21, (intptr_t) &isr21);
+		set_Int_Gate(22, (intptr_t) &isr22);
+		set_Int_Gate(23, (intptr_t) &isr23);
+		set_Int_Gate(24, (intptr_t) &isr24);
+		set_Int_Gate(25, (intptr_t) &isr25);
+		set_Int_Gate(26, (intptr_t) &isr26);
+		set_Int_Gate(27, (intptr_t) &isr27);
+		set_Int_Gate(28, (intptr_t) &isr28);
+		set_Int_Gate(29, (intptr_t) &isr29);
+		set_Int_Gate(30, (intptr_t) &isr30);
+		set_Int_Gate(31, (intptr_t) &isr31);
+		LOAD_IDT(&IDTR);
 		
-		asm volatile("LIDT (%0)" : : "r"(&IDTR));
-		enable_Ints();
-		//asm volatile("int $0x0");
 }
 					
 void set_Int_Gate(int reqNum, uint64_t base)//set ISR where n is the ISR number
