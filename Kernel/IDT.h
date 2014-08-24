@@ -7,25 +7,25 @@
 struct IDT_PTR
 {
 	uint16_t Limit;
-	intptr_t Base;
+	uint64_t Base;
 }__attribute__((packed));
 typedef struct IDT_PTR IDTR_T;
 
 struct IDT
 {
 	
-	uint16_t BaseLo;
+	uint64_t BaseLo;
 	uint16_t Selector;
 	uint8_t Reserved;
 	uint8_t Flags;
-	uint16_t BaseHi;
+	uint64_t BaseHi;
 	
 }__attribute__((packed));
 typedef struct IDT IDT_T;
 
 ASM_LINK void initIDT();
 
-ASM_LINK void set_Int_Gate(int reqNum, uint32_t base);
+ASM_LINK void set_Int_Gate(int reqNum, uint64_t base);
 ASM_LINK void isr0();
 ASM_LINK void isr1();
 ASM_LINK void isr2();
@@ -58,3 +58,5 @@ ASM_LINK void isr28();
 ASM_LINK void isr29();
 ASM_LINK void isr30();
 ASM_LINK void isr31();
+ASM_LINK void ISR_HANDLER();
+ASM_LINK void LOAD_IDT(IDTR_T *IDTR);
