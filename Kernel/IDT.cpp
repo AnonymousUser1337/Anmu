@@ -1,6 +1,4 @@
 #include "IDT.h"
-#define IDX 0
-#define isr(a) isr##a
 
 IDT_T IDT_ENTRIES[MAX_INTS];
 IDTR_T IDTR;
