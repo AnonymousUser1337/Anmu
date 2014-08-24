@@ -7,7 +7,7 @@ int y_pos = 0;
 
 void runTerm()
 {
-	//initIDT(); //for now don't use interrupts still making system crash
+	initIDT();
 	int Color = LIGHT_BLUE;
 	int Color2 = LIGHT_RED;
 	int Color3 = LIGHT_GREEN;
@@ -30,7 +30,7 @@ void kPrintf(const char *s,int color, ...)
 {
 	
 	va_list list;//create list of arguments
-        va_start( list, color );//declare this the start
+    va_start( list, color );//declare this the start
 	for(int i = 0;i< strlen_Const(s);i++)
 	{		
 			
@@ -116,7 +116,7 @@ void putch(char c,int color)
 {	
 	//Print a character to the video memory
 	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));
-	char * s = (char*)location;
+	char * s = (char*)(intptr_t)location;
 	s[0] = c;
 	s[1] = color;
 	//update_cursor();//Not working should be updating the position of the cursor
