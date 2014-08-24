@@ -119,7 +119,7 @@ void putch(char c,int color)
 	char * s = (char*)(intptr_t)location;
 	s[0] = c;
 	s[1] = color;
-	//update_cursor();//Not working should be updating the position of the cursor
+	
 	x_pos++;
 	update_cursor();
 }
