@@ -250,13 +250,3 @@ common_handler:
 	
 	
 ret
-[GLOBAL LOAD_IDT]
-LOAD_IDT:
-
-	cli
-	pop rax
-	
-	LIDT[rax]
-	sti
-	
-ret
