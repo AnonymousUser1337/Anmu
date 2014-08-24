@@ -12,7 +12,7 @@ unsigned char inb(unsigned short port)
     asm volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
     return ret;
 }
-void pushall()//push all registers
+void pushall()
 {
 	asm volatile("pushq %rax");
 	asm volatile("pushq %rbx");
@@ -23,7 +23,7 @@ void pushall()//push all registers
 	asm volatile("pushq %rbp");	
 
 }
-void popall()//pop all registers
+void popall()
 {
 	asm volatile("popq %rbp");
 	asm volatile("popq %rdi");
@@ -32,4 +32,13 @@ void popall()//pop all registers
 	asm volatile("popq %rcx");
 	asm volatile("popq %rbx");
 	asm volatile("popq %rax");
+}
+void enable_Ints()
+{
+	asm volatile("sti");
+}
+
+void disable_Ints()
+{
+	asm volatile("cli");
 }
