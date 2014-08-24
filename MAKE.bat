@@ -36,3 +36,5 @@ del Anmu.bin
 del kernel.o
 del TextTerminal.o
 del HAL.o
+del IDT.o
+del ISR_handlers.o
