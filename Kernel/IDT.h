@@ -59,4 +59,4 @@ ASM_LINK void isr29();
 ASM_LINK void isr30();
 ASM_LINK void isr31();
 ASM_LINK void ISR_HANDLER();
-
+ASM_LINK void LOAD_IDT(IDTR_T * IDTR);
