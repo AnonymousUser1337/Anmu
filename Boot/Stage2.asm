@@ -202,7 +202,7 @@ main:
 
         lgdt[GDT_64.Pointer]
 
-        mov eax,cr0       ; <<  problem here 
+        mov eax,cr0        
         or  eax,1 << 31
         mov cr0,eax         ; enable paging
 
