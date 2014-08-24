@@ -11,14 +11,20 @@ cd kernel
 x86_64-elf-g++ -fno-exceptions -fno-rtti -ffreestanding -mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -c -o kernel.o kernel.cpp
 x86_64-elf-g++ -fno-exceptions -fno-rtti -ffreestanding -mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -c -o TextTerminal.o TextTerminal.cpp
 x86_64-elf-g++ -fno-exceptions -fno-rtti -ffreestanding -mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -c -o HAL.o HAL.cpp
+x86_64-elf-g++ -fno-exceptions -fno-rtti -ffreestanding -mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -c -o IDT.o IDT.cpp
+nasm -f elf64 ISR_handlers.asm -o ISR_handlers.o
+copy ISR_handlers.o C:\cygwin64\home\Anonymous\Zeroth-OS
 copy kernel.o C:\cygwin64\home\Anonymous\Zeroth-OS
 copy TextTerminal.o C:\cygwin64\home\Anonymous\Zeroth-OS
 copy HAL.o C:\cygwin64\home\Anonymous\Zeroth-OS
+copy IDT.o C:\cygwin64\home\Anonymous\Zeroth-OS
 del kernel.o
 del TextTerminal.o
 del HAL.o
+del IDT.o
+del ISR_handlers.o
 cd C:\cygwin64\home\Anonymous\Zeroth-OS
-x86_64-elf-ld -T linkerscript.ld -o MyOS.bin Stage2.o kernel.o TextTerminal.o HAL.o -nostdlib
+x86_64-elf-ld -T linkerscript.ld -o MyOS.bin Stage2.o kernel.o TextTerminal.o HAL.o IDT.o ISR_handlers.o -nostdlib
 x86_64-elf-objcopy -S -O binary MyOS.bin Anmu.bin
 del MyOS.bin
 copy Stage1.bin Root
