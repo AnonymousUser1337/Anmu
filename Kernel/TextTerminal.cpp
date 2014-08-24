@@ -1,4 +1,5 @@
 #include "TextTerminal.h"
+#include "IDT.h"
 int location = VIDEO_MEM;
 int x_pos = 0;
 int y_pos = 0;
@@ -6,6 +7,7 @@ int y_pos = 0;
 
 void runTerm()
 {
+	//initIDT(); //for now don't use interrupts still making system crash
 	int Color = LIGHT_BLUE;
 	int Color2 = LIGHT_RED;
 	int Color3 = LIGHT_GREEN;
@@ -20,6 +22,7 @@ void runTerm()
 	putch(']',Color3);
 	kPrintf("#",Color4);
 	
+	while(1==1);//hang
 	
 
 }
@@ -27,7 +30,7 @@ void kPrintf(const char *s,int color, ...)
 {
 	
 	va_list list;//create list of arguments
-    va_start( list, color );//declare this the start
+        va_start( list, color );//declare this the start
 	for(int i = 0;i< strlen_Const(s);i++)
 	{		
 			
@@ -81,7 +84,7 @@ void itoa(int n, int color,int base)
 {
 	int remainder = 0;
 	int i = 0;
-	char s[100];
+	char s[100] = {0};
 	location =  VIDEO_MEM+(((Cols*2) * y_pos )+ (x_pos * 2));//calculate location
 	if(base == 16)
 	{
@@ -116,6 +119,7 @@ void putch(char c,int color)
 	char * s = (char*)location;
 	s[0] = c;
 	s[1] = color;
+	//update_cursor();//Not working should be updating the position of the cursor
 	x_pos++;
 	update_cursor();
 }
