@@ -48,7 +48,9 @@ void initIDT()
 		set_Int_Gate(29, (intptr_t) isr29);
 		set_Int_Gate(30, (intptr_t) isr30);
 		set_Int_Gate(31, (intptr_t) isr31);
-		LOAD_IDT(&IDTR);
+		
+		asm volatile("LIDT (%0)" : : "r"(&IDTR));
+		enable_Ints();
 		//asm volatile("int $0x0");
 }
 					
