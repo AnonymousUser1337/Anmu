@@ -15,7 +15,7 @@ void initIDT()
 	kPrintf("Initializing the IDT at the linear address: %d ......\n",LIGHT_BLUE, IDTR.Base);//Tell the user that the IDT is getting ready
 	
 		
-	
+		//set interrupt gates
 		set_Int_Gate(0, (intptr_t) isr0);
 		set_Int_Gate(1, (intptr_t) isr1);
 		set_Int_Gate(2, (intptr_t) isr2);
@@ -49,11 +49,11 @@ void initIDT()
 		set_Int_Gate(30, (intptr_t) isr30);
 		set_Int_Gate(31, (intptr_t) isr31);
 		asm volatile("LIDT (%0)" : : "r"(&IDTR));
-	//asm volatile("sti");
-	//asm volatile("int $0x0");
+		enable_Ints();
+		//asm volatile("int $0x0");
 }
 					
-void set_Int_Gate(int reqNum, uint32_t base)//set ISR where n is the ISR number
+void set_Int_Gate(int reqNum, uint64_t base)//set ISR where n is the ISR number
 {
 	uint64_t mask = 0xffffffff;//64 bit mask
 	IDT_ENTRIES[reqNum].Selector = 0x8;//pass in the code selector
@@ -64,12 +64,6 @@ void set_Int_Gate(int reqNum, uint32_t base)//set ISR where n is the ISR number
 	IDT_ENTRIES[reqNum].BaseHi =(base>> 16) & mask;
 	
 }
-
-//isr handlers
-//push all registers 
-//some code
-//pop registers
-//return to what cpu was doing
 void isr0()
 {
 	pushall();
