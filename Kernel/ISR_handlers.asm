@@ -254,9 +254,9 @@ ret
 LOAD_IDT:
 
 	cli
-	mov rax, QWORD[rsp+4]
 	
-	LIDT[rax]
+	LIDT[rsp+4]
 	
 	sti
+
 ret
