@@ -5,9 +5,13 @@
 ASM_LINK void kMain(void)
 {	
 	runTerm();
-	while(1==1);
-
+	
 }
 #endif
+
+
+
+
+
 
 
