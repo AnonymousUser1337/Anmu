@@ -250,3 +250,13 @@ common_handler:
 	
 	
 ret
+[GLOBAL LOAD_IDT]
+LOAD_IDT:
+
+	cli
+	mov rax, QWORD[rsp+4]
+	
+	LIDT[rax]
+	
+	sti
+ret
